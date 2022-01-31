@@ -1,37 +1,60 @@
-﻿using Discord;
+﻿
+using Discord;
+using Discord.Addons.Hosting;
+using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using PlantBot.Services;
 
 public class Program
 {
-	public static Task Main(string[] args) => new Program().MainAsync();
+	static async Task Main()
+    {
+        var builder = new HostBuilder()
+            .ConfigureAppConfiguration(x =>
+            {
+                var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false, true)
+                .Build();
 
-    private DiscordSocketClient _client;
+                x.AddConfiguration(configuration);
+            })
+            .ConfigureLogging(x =>
+            {
+                x.AddConsole();
+                x.SetMinimumLevel(LogLevel.Debug);
+            })
+            .ConfigureDiscordHost((context, config) =>
+            {
+                config.SocketConfig = new DiscordSocketConfig
+                {
+                    LogLevel = LogSeverity.Debug,
+                    AlwaysDownloadUsers = false,
+                    MessageCacheSize = 200
+                };
+                config.Token = context.Configuration["Token"];
+            })
+            .UseCommandService((context, config) =>
+            {
+                config.CaseSensitiveCommands = false;
+                config.LogLevel = LogSeverity.Debug;
+                config.DefaultRunMode = RunMode.Sync;
+            })
+            .ConfigureServices((context, services) =>
+            {
+                services.AddHostedService<CommandHandler>();
+            })
+            .UseConsoleLifetime();
 
-    public async Task MainAsync()
-	{
-        _client = new DiscordSocketClient();
-
-        _client.Log += Log;
-
-        //  You can assign your bot token to a string, and pass that in to connect.
-        //  This is, however, insecure, particularly if you plan to have your code hosted in a public repository.
-        //var token = "token";
-
-        // Some alternative options would be to keep your token in an Environment Variable or a standalone file.
-        // var token = Environment.GetEnvironmentVariable("NameOfYourEnvironmentVariable");
-        var token = File.ReadAllText("token.txt");
-        // var token = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json")).Token;
-
-        await _client.LoginAsync(TokenType.Bot, token);
-        await _client.StartAsync();
-
-        // Block this task until the program is closed.
-        await Task.Delay(-1);
+        var host = builder.Build();
+        using (host)
+        {
+            await host.StartAsync();
+            await Task.Delay(-1);
+        }
     }
-
-	private Task Log(LogMessage msg)
-	{
-		Console.WriteLine(msg.ToString());
-		return Task.CompletedTask;
-	}
 }
