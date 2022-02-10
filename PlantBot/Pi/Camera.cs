@@ -1,6 +1,9 @@
-﻿using MMALSharp;
+﻿using Microsoft.Extensions.Logging;
+using MMALSharp;
 using MMALSharp.Common;
+using MMALSharp.Common.Utility;
 using MMALSharp.Handlers;
+using NLog.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +14,20 @@ namespace PlantBot.Pi
 {
     public class Camera
     {
+        public Camera()
+        {
+/*            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                .ClearProviders()
+                .SetMinimumLevel(LogLevel.Trace)
+                .AddNLog("NLog.config");
+            });
+
+            MMALLog.LoggerFactory = loggerFactory;*/
+        }
+
+
         public async Task TakePicture()
         {
             // Singleton initialized lazily. Reference once in your application.
@@ -23,7 +40,7 @@ namespace PlantBot.Pi
 
             // Cleanup disposes all unmanaged resources and unloads Broadcom library. To be called when no more processing is to be done
             // on the camera.
-            cam.Cleanup();
+            //cam.Cleanup();
         }
     }
 }

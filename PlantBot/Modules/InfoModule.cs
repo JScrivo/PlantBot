@@ -5,6 +5,13 @@ namespace PlantBot.Modules
 {
     public class General : ModuleBase<SocketCommandContext>
     {
+        private Camera _camera;
+
+        public General()
+        {
+            _camera = new Camera();
+        }
+
         [Command("ping")]
         public async Task PingAsync()
         {
@@ -14,9 +21,9 @@ namespace PlantBot.Modules
         [Command("cam")]
         public async Task CameraAsync()
         {
-            Camera camera = new Camera();
+            //Camera camera = new Camera();
 
-            await camera.TakePicture();
+            await _camera.TakePicture();
 
             var directory = new DirectoryInfo("/home/pi/images");
 
